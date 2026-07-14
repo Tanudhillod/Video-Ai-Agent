@@ -1,0 +1,21 @@
+# Virtual Environment
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Environment variables
+.env
+
+# VS Code settings
+.vscode/
+
+# Streamlit
+.streamlit/
+
+# Chroma database
+chroma_db/
+
+# macOS
+.DS_Store
