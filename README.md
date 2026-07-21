@@ -115,8 +115,6 @@ SARVAM_API_KEY=your_sarvam_api_key_here   # only needed for hinglish mode
 SARVAM_STT_MODEL=saaras:v2.5              # optional, defaults shown
 ```
 
-> ⚠️ **Security note:** never commit a real `.env` file. If a key has already been pushed to the repository, rotate it immediately and remove it from git history — being listed in `.gitignore` does not remove a file that was already committed.
-
 ---
 
 ## Usage
