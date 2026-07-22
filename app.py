@@ -954,14 +954,83 @@ div[data-baseweb="popover"] li:hover {{
 [data-testid="stMarkdownContainer"] a {{
     color: {T["accent"]} !important;
 }}
+/* =========================================
+   Export Report Buttons
+========================================= */
+
+div.stDownloadButton {{
+    width:100%;
+}}
+
+div.stDownloadButton > button {{
+
+    width:100% !important;
+    height:46px !important;
+
+    border:none !important;
+    border-radius:12px !important;
+
+    background:linear-gradient(
+        90deg,
+        #2D8CFF 0%,
+        #5C7CFA 100%
+    ) !important;
+
+    color:#FFFFFF !important;
+    -webkit-text-fill-color:#FFFFFF !important;
+
+    font-family:"Space Grotesk",sans-serif !important;
+    font-size:15px !important;
+    font-weight:600 !important;
+    letter-spacing:0.2px !important;
+
+    display:flex !important;
+    justify-content:center !important;
+    align-items:center !important;
+
+    transition:all .25s ease !important;
+}}
+
+div.stDownloadButton > button * {{
+    color:#FFFFFF !important;
+    fill:#FFFFFF !important;
+    -webkit-text-fill-color:#FFFFFF !important;
+}}
+
+div.stDownloadButton > button:hover {{
+
+    transform:translateY(-2px);
+
+    background:linear-gradient(
+        90deg,
+        #227CFF 0%,
+        #4F73FA 100%
+    ) !important;
+
+    box-shadow:0 10px 22px rgba(45,140,255,.28);
+}}
+
+div.stDownloadButton > button:active {{
+    transform:translateY(0);
+}}
+
+div.stDownloadButton > button:focus {{
+    outline:none !important;
+    color:#FFFFFF !important;
+}}
+
+div.stDownloadButton > button:disabled {{
+    opacity:.65;
+    cursor:not-allowed;
+}}
 
 /* ── Accessibility: honor reduced-motion preference ── */
 @media (prefers-reduced-motion: reduce) {{
     *, *::before, *::after {{
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
+        animation-duration:0.01ms !important;
+        animation-iteration-count:1 !important;
+        transition-duration:0.01ms !important;
+        scroll-behavior:auto !important;
     }}
 }}
 </style>
@@ -1172,9 +1241,10 @@ if st.session_state.active_tab == "analyze":
     elif run_btn:
         st.warning("Please enter a YouTube URL or file path.")
 
-    # Results
+       # Results
     if st.session_state.result:
         r = st.session_state.result
+
         st.markdown(f"""
         <div style="display:flex;align-items:center;gap:12px;margin:8px 0 22px;">
             {badge("Analysis Complete","success")}
@@ -1194,128 +1264,103 @@ if st.session_state.active_tab == "analyze":
             [T["accent"], T["accent2"], T["success"], T["warning"]],
         ):
             with col:
-                st.markdown(f'<div class="stat-card"><div class="stat-label">{lbl}</div><div class="stat-value" style="color:{col_hex};">{val}</div></div>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<div class="stat-card"><div class="stat-label">{lbl}</div><div class="stat-value" style="color:{col_hex};">{val}</div></div>',
+                    unsafe_allow_html=True,
+                )
 
         st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown(f'<div class="content-card"><div class="card-eyebrow">◈ Summary</div><div class="card-body">{r.get("summary","").replace(chr(10),"<br>")}</div></div>', unsafe_allow_html=True)
+
+        st.markdown(
+            f'<div class="content-card"><div class="card-eyebrow">◈ Summary</div><div class="card-body">{r.get("summary","").replace(chr(10),"<br>")}</div></div>',
+            unsafe_allow_html=True,
+        )
 
         col_a, col_d = st.columns(2)
+
         with col_a:
             rows, cnt = action_rows(r.get("action_items", ""))
             none_html_a = f'<span style="color:{T["text_dim"]}">None detected</span>'
-            st.markdown(f'<div class="content-card"><div class="card-eyebrow">◈ Action Items</div>{badge(str(cnt) + " tasks")}<br><br>{rows or none_html_a}</div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="content-card"><div class="card-eyebrow">◈ Action Items</div>{badge(str(cnt) + " tasks")}<br><br>{rows or none_html_a}</div>',
+                unsafe_allow_html=True,
+            )
+
         with col_d:
             rows_d, cnt_d = action_rows(r.get("key_decisions", ""), T["accent2"])
             accent2 = T["accent2"]
             text_dim = T["text_dim"]
             none_html_d = f'<span style="color:{text_dim}">None detected</span>'
-            st.markdown(f'<div class="content-card"><div class="card-eyebrow" style="color:{accent2};">◈ Key Decisions</div>{badge(str(cnt_d) + " decisions", "purple")}<br><br>{rows_d or none_html_d}</div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="content-card"><div class="card-eyebrow" style="color:{accent2};">◈ Key Decisions</div>{badge(str(cnt_d) + " decisions", "purple")}<br><br>{rows_d or none_html_d}</div>',
+                unsafe_allow_html=True,
+            )
 
         q_items_txt = r.get("open_questions", "")
+
         if q_items_txt.strip():
             rows_q, _ = action_rows(q_items_txt, T["warning"])
-            st.markdown(f'<div class="content-card"><div class="card-eyebrow" style="color:{T["warning"]};">◈ Open Questions</div>{rows_q}</div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="content-card"><div class="card-eyebrow" style="color:{T["warning"]};">◈ Open Questions</div>{rows_q}</div>',
+                unsafe_allow_html=True,
+            )
 
         with st.expander("Raw Transcript", expanded=False):
-            st.markdown(f'<div class="transcript-block">{r.get("transcript","")}</div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="transcript-block">{r.get("transcript","")}</div>',
+                unsafe_allow_html=True,
+            )
 
         st.markdown(f"""
         <div style="margin-top:8px;padding:18px 22px;background:linear-gradient(135deg,{T["accent"]}0D,{T["accent2"]}0D);border:1px solid {T["accent"]}33;border-radius:14px;">
-            <div style="font-family:'Space Grotesk',sans-serif;font-weight:600;color:{T['text']};margin-bottom:4px;">Ready to chat with this meeting?</div>
-            <div style="font-size:0.83rem;color:{T['text_muted']};">Ask anything — decisions, context, follow-ups — powered by RAG.</div>
-        </div>
-        """, unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
-                # ==========================
-        # Export Report
-        # ==========================
-        st.markdown("---")
-        st.subheader("📥 Export Report")
-
-        pdf_data = generate_pdf(r)
-        txt_data = generate_txt(r)
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.download_button(
-                label="📄 Download PDF",
-                data=pdf_data,
-                file_name="meeting_report.pdf",
-                mime="application/pdf",
-                use_container_width=True,
-            )
-
-        with col2:
-            st.download_button(
-                label="📝 Download TXT",
-                data=txt_data,
-                file_name="meeting_report.txt",
-                mime="text/plain",
-                use_container_width=True,
-            )
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        if st.button("Open Chat Interface", key="goto_chat"):
-            st.session_state.active_tab = "chat"; st.rerun()
-
-
-# ─── CHAT TAB ────────────────────────────────────────────────────────────────────
-elif st.session_state.active_tab == "chat":
-
-    if not st.session_state.result:
-        st.markdown(f"""
-        <div style="display:flex;flex-direction:column;align-items:center;padding:80px 0;text-align:center;">
-            <div class="waveform" style="margin-bottom:20px;">{WAVE_PAUSED}</div>
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:1.2rem;font-weight:600;color:{T['text']};margin-bottom:8px;">No meeting loaded yet</div>
-            <div style="font-size:0.88rem;color:{T['text_muted']};">Run an analysis first, then come back to chat.</div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Go to Analyze", key="back_to_analyze"):
-            st.session_state.active_tab = "analyze"; st.rerun()
-    else:
-        r = st.session_state.result
-        st.markdown(f"""
-        <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px;">
-            <div class="waveform">{WAVE}</div>
-            <div>
-                <div style="font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;color:{T['text']};">Chat with your meeting</div>
-                <div style="font-size:0.77rem;color:{T['text_muted']};">{r.get('title','Untitled')} &nbsp;·&nbsp; RAG-powered Q&amp;A</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-weight:600;color:{T['text']};margin-bottom:4px;">
+                Ready to chat with this meeting?
             </div>
-            <div style="margin-left:auto;">{badge("Active","success")}</div>
+            <div style="font-size:0.83rem;color:{T['text_muted']};">
+                Ask anything — decisions, context, follow-ups — powered by RAG.
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
-        if not st.session_state.chat_history:
-            st.markdown(f'<div style="text-align:center;padding:40px 0 20px;color:{T["text_dim"]};font-size:0.88rem;font-style:italic;">Ask anything about your meeting — decisions, tasks, who said what…</div>', unsafe_allow_html=True)
-        else:
-            for msg in st.session_state.chat_history:
-                if msg["role"] == "user":
-                    st.markdown(f'<div style="margin-bottom:14px;"><div class="chat-role chat-role-user">You</div><div class="chat-bubble-user">{msg["content"]}</div></div>', unsafe_allow_html=True)
-                else:
-                    st.markdown(f'<div style="margin-bottom:14px;"><div class="chat-role chat-role-ai">MeetMind</div><div class="chat-bubble-ai">{msg["content"]}</div></div>', unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
 
-        question = st.chat_input("Ask about your meeting…", key="chat_input")
-        if question:
-            try:
-                from core.rag_engine import ask_question
-                st.session_state.chat_history.append({"role": "user", "content": question})
-                ph2 = st.empty()
-                ph2.markdown(f'<div class="chat-bubble-ai" style="margin-right:20%;"><div class="chat-role chat-role-ai">MeetMind</div><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>', unsafe_allow_html=True)
-                answer = ask_question(r["rag_chain"], question)
-                ph2.empty()
-                st.session_state.chat_history.append({"role": "assistant", "content": answer})
-                st.rerun()
-            except Exception as e:
-                st.error(f"Error: {e}")
+        # ==========================
+        # Export Meeting Report
+        # ==========================
+    st.divider()
 
-        if st.session_state.chat_history:
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("Clear Conversation", key="clear_chat"):
-                st.session_state.chat_history = []; st.rerun()
+    st.subheader("Export Meeting Report")
 
+    st.caption("Download your meeting summary for offline viewing or sharing.")
 
+    pdf_data = generate_pdf(r)
+    txt_data = generate_txt(r)
+
+    col1,col2 = st.columns(2,gap="medium")
+
+    with col1:
+        st.download_button(
+            "Download PDF",
+            pdf_data,
+            "meeting_report.pdf",
+            mime="application/pdf",
+            use_container_width=True,
+        )
+
+    with col2:
+        st.download_button(
+            "Download TXT",
+            txt_data,
+            "meeting_report.txt",
+            mime="text/plain",
+            use_container_width=True,
+        )
+
+    st.markdown("<div style='height:18px'></div>",unsafe_allow_html=True)
+
+    if st.button("Open Chat Interface",key="goto_chat"):
+        st.session_state.active_tab="chat"
+        st.rerun()
 # ═══════════════════════════════════════════════════════════════════════════════
 # ─── SCROLLABLE ABOUT / HOW-IT-WORKS / TECH SECTIONS ──────────────────────────
 # ═══════════════════════════════════════════════════════════════════════════════
