@@ -1,5 +1,6 @@
 # Virtual Environment
 .venv/
+venv/
 
 # Python cache
 __pycache__/
@@ -16,6 +17,10 @@ __pycache__/
 
 # Chroma database
 chroma_db/
+
+# Generated/local project files
+downloades/
+vector_db/
 
 # macOS
 .DS_Store
