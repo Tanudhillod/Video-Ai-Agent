@@ -1,6 +1,6 @@
 import streamlit as st
 from dotenv import load_dotenv
-
+from utils.export_utils import generate_pdf, generate_txt
 load_dotenv()
 
 # ─── Page Config ────────────────────────────────────────────────────────────────
@@ -1226,6 +1226,37 @@ if st.session_state.active_tab == "analyze":
         </div>
         """, unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
+                # ==========================
+        # Export Report
+        # ==========================
+        st.markdown("---")
+        st.subheader("📥 Export Report")
+
+        pdf_data = generate_pdf(r)
+        txt_data = generate_txt(r)
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.download_button(
+                label="📄 Download PDF",
+                data=pdf_data,
+                file_name="meeting_report.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+            )
+
+        with col2:
+            st.download_button(
+                label="📝 Download TXT",
+                data=txt_data,
+                file_name="meeting_report.txt",
+                mime="text/plain",
+                use_container_width=True,
+            )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
         if st.button("Open Chat Interface", key="goto_chat"):
             st.session_state.active_tab = "chat"; st.rerun()
 
