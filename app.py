@@ -14,36 +14,54 @@ st.set_page_config(
 # ─── Theme Tokens ───────────────────────────────────────────────────────────────
 THEMES = {
     "dark": {
-        "bg":          "#0D1117",
-        "surface":     "#161B22",
-        "surface2":    "#21262D",
-        "border":      "#30363D",
-        "accent":      "#00D4AA",
-        "accent2":     "#7C5CFC",
-        "text":        "#E6EDF3",
-        "text_muted":  "#8B949E",
-        "text_dim":    "#484F58",
-        "success":     "#3FB950",
-        "warning":     "#D29922",
-        "error":       "#F85149",
-        "card_shadow": "0 4px 24px rgba(0,0,0,0.5)",
-        "footer_bg":   "#0A0E13",
+        "bg":          "#0A0E14",
+        "bg_grad":     "radial-gradient(1200px 600px at 10% -10%, #10192A 0%, #0A0E14 55%)",
+        "surface":     "#131A24",
+        "surface2":    "#1B2431",
+        "border":      "#26303F",
+        "accent":      "#2DD4BF",
+        "accent2":     "#8B7CF6",
+        "accent_rgb":  "45,212,191",
+        "accent2_rgb": "139,124,246",
+        "text":        "#ECF2F8",
+        "text_muted":  "#95A2B4",
+        "text_dim":    "#7A87A0",
+        "success":     "#34D399",
+        "success_rgb": "52,211,153",
+        "warning":     "#FBBF24",
+        "warning_rgb": "251,191,36",
+        "error":       "#FB7185",
+        "error_rgb":   "251,113,133",
+        "card_shadow": "0 10px 30px rgba(0,0,0,0.45)",
+        "footer_bg":   "#070A0F",
+        "btn_text":    "#08110F",
+        "input_bg":    "#131A24",
+        "glass_blur":  "saturate(160%) blur(14px)",
     },
     "light": {
-        "bg":          "#F0F4F8",
+        "bg":          "#F5F7FB",
+        "bg_grad":     "radial-gradient(1200px 600px at 10% -10%, #EAF6F3 0%, #F5F7FB 55%)",
         "surface":     "#FFFFFF",
-        "surface2":    "#F6F8FA",
-        "border":      "#D0D7DE",
-        "accent":      "#00A080",
-        "accent2":     "#6448E0",
-        "text":        "#1C2128",
-        "text_muted":  "#57606A",
-        "text_dim":    "#AFB8C1",
-        "success":     "#1A7F37",
-        "warning":     "#9A6700",
-        "error":       "#CF222E",
-        "card_shadow": "0 2px 12px rgba(0,0,0,0.08)",
-        "footer_bg":   "#1C2128",
+        "surface2":    "#F0F3F8",
+        "border":      "#DEE4EC",
+        "accent":      "#0A7F6E",
+        "accent2":     "#6C4FD1",
+        "accent_rgb":  "10,127,110",
+        "accent2_rgb": "108,79,209",
+        "text":        "#121826",
+        "text_muted":  "#525C6B",
+        "text_dim":    "#6B7585",
+        "success":     "#187A4B",
+        "success_rgb": "24,122,75",
+        "warning":     "#9A6300",
+        "warning_rgb": "154,99,0",
+        "error":       "#C22A3E",
+        "error_rgb":   "194,42,62",
+        "card_shadow": "0 8px 24px rgba(23,43,77,0.08)",
+        "footer_bg":   "#101624",
+        "btn_text":    "#FFFFFF",
+        "input_bg":    "#FFFFFF",
+        "glass_blur":  "saturate(180%) blur(14px)",
     },
 }
 
@@ -57,6 +75,16 @@ for k, v in {
 
 T = THEMES[st.session_state.theme]
 
+# Opacity for the animated mesh-gradient background blobs — kept very subtle in
+# light mode (a light background shows saturated color much more readily than a
+# dark one), and low enough everywhere that text/buttons stay fully readable.
+MESH_OPACITY = 0.11 if st.session_state.theme == "dark" else 0.05
+
+# How translucent the glass footer's surface is, per theme. Dark mode reads best
+# with a deeper, moodier glass; light mode wants to stay airy and bright. Kept
+# fairly transparent so the blur/ambient glow behind it is clearly visible.
+FOOTER_ALPHA = "94" if st.session_state.theme == "dark" else "CC"
+
 # ─── CSS ────────────────────────────────────────────────────────────────────────
 st.markdown(f"""
 <style>
@@ -65,64 +93,143 @@ st.markdown(f"""
 *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
 
 html, body, [data-testid="stApp"] {{
+    background: {T["bg_grad"]} !important;
     background-color: {T["bg"]} !important;
     color: {T["text"]} !important;
     font-family: 'Inter', sans-serif;
+    transition: background-color 0.35s ease, color 0.35s ease;
+}}
+[data-testid="stAppViewContainer"], [data-testid="stMain"] {{
+    transition: background-color 0.35s ease;
 }}
 [data-testid="stSidebar"] {{
-    background-color: {T["surface"]} !important;
+    background-color: {T["surface"]}EE !important;
+    -webkit-backdrop-filter: {T["glass_blur"]};
+    backdrop-filter: {T["glass_blur"]};
     border-right: 1px solid {T["border"]} !important;
+    transition: background-color 0.35s ease, border-color 0.35s ease;
 }}
 [data-testid="stSidebar"] > div {{ padding-top: 0 !important; }}
 #MainMenu, footer, header {{ visibility: hidden; }}
 .stDeployButton, [data-testid="stToolbar"] {{ display: none; }}
 h1,h2,h3,h4 {{ font-family: 'Space Grotesk', sans-serif !important; color: {T["text"]} !important; }}
+::selection {{ background: {T["accent"]}55; color: {T["text"]}; }}
+:focus-visible {{ outline: 2px solid {T["accent"]} !important; outline-offset: 2px !important; }}
 
 /* Buttons */
 .stButton > button {{
     background: linear-gradient(135deg, {T["accent"]}, {T["accent2"]}) !important;
-    color: #fff !important; border: none !important;
+    background-size: 160% 160% !important;
+    color: {T["btn_text"]} !important; border: none !important;
     border-radius: 10px !important;
     font-family: 'Space Grotesk', sans-serif !important;
     font-weight: 600 !important; font-size: 0.92rem !important;
     padding: 0.55rem 1.3rem !important;
-    transition: all 0.22s ease !important;
-    box-shadow: 0 4px 14px rgba(0,212,170,0.2) !important;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, background-position 0.5s ease !important;
+    box-shadow: 0 4px 14px rgba({T["accent_rgb"]},0.28) !important;
     letter-spacing: 0.02em !important;
 }}
 .stButton > button:hover {{
     transform: translateY(-2px) !important;
-    box-shadow: 0 8px 22px rgba(0,212,170,0.38) !important;
-    filter: brightness(1.07) !important;
+    box-shadow: 0 10px 26px rgba({T["accent_rgb"]},0.4) !important;
+    background-position: 100% 50% !important;
 }}
-.stButton > button:active {{ transform: translateY(0) !important; }}
+.stButton > button,
+.stButton > button p,
+.stButton > button span,
+.stButton > button div,
+.stButton > button [data-testid="stMarkdownContainer"],
+.stButton > button [data-testid="stMarkdownContainer"] p {{
+    color: {T["btn_text"]} !important;
+}}
+.stButton > button:active {{ transform: translateY(0) scale(0.98) !important; }}
 
 
 /* Inputs */
 .stTextInput > div > div > input,
 .stTextArea > div > div > textarea {{
-    background-color: {T["surface2"]} !important;
+    background-color: {T["input_bg"]} !important;
     border: 1.5px solid {T["border"]} !important;
     border-radius: 10px !important; color: {T["text"]} !important;
+    caret-color: {T["text"]} !important;
     font-family: 'Inter', sans-serif !important; font-size: 0.92rem !important;
-    transition: border-color 0.2s !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
 }}
 .stTextInput > div > div > input:focus,
 .stTextArea > div > div > textarea:focus {{
     border-color: {T["accent"]} !important;
-    box-shadow: 0 0 0 3px rgba(0,212,170,0.14) !important;
+    box-shadow: 0 0 0 3px rgba({T["accent_rgb"]},0.16) !important;
 }}
 .stSelectbox > div > div {{
-    background-color: {T["surface2"]} !important;
+    background-color: {T["input_bg"]} !important;
     border: 1.5px solid {T["border"]} !important;
     border-radius: 10px !important; color: {T["text"]} !important;
+    transition: border-color 0.2s !important;
 }}
+[data-baseweb="select"]:hover > div {{ border-color: {T["accent"]}99 !important; }}
 
 /* Scrollbar */
-::-webkit-scrollbar {{ width: 5px; height: 5px; }}
-::-webkit-scrollbar-track {{ background: {T["bg"]}; }}
-::-webkit-scrollbar-thumb {{ background: {T["border"]}; border-radius: 3px; }}
+::-webkit-scrollbar {{ width: 6px; height: 6px; }}
+::-webkit-scrollbar-track {{ background: transparent; }}
+::-webkit-scrollbar-thumb {{ background: {T["border"]}; border-radius: 4px; }}
 ::-webkit-scrollbar-thumb:hover {{ background: {T["accent"]}; }}
+
+/* ── Ambient mesh-gradient background ── */
+/* Purely decorative, fixed behind all content (z-index:-1) and click-through
+   (pointer-events:none) so it can never block reading or interaction. Only
+   `transform` is animated — no width/height/top/left/box-shadow — to stay
+   GPU-friendly and avoid layout thrash. */
+.ambient-background {{
+    position: fixed; inset: 0; z-index: -1;
+    overflow: hidden; pointer-events: none;
+}}
+.mesh-blob {{
+    position: absolute; border-radius: 50%;
+    filter: blur(100px);
+    will-change: transform;
+}}
+.mesh-blob-1 {{
+    width: 460px; height: 460px; top: -12%; left: -8%;
+    background: {T["accent"]}; opacity: {MESH_OPACITY};
+    animation: mesh-float-1 34s ease-in-out infinite;
+}}
+.mesh-blob-2 {{
+    width: 420px; height: 420px; top: 38%; right: -10%;
+    background: {T["accent2"]}; opacity: {MESH_OPACITY};
+    animation: mesh-float-2 38s ease-in-out infinite;
+}}
+.mesh-blob-3 {{
+    width: 380px; height: 380px; bottom: -14%; left: 28%;
+    background: {T["accent"]}; opacity: {MESH_OPACITY * 0.9:.3f};
+    animation: mesh-float-3 42s ease-in-out infinite;
+}}
+.mesh-blob-4 {{
+    width: 300px; height: 300px; top: 10%; right: 20%;
+    background: {T["accent2"]}; opacity: {MESH_OPACITY * 0.85:.3f};
+    animation: mesh-float-4 30s ease-in-out infinite;
+}}
+.mesh-blob-5 {{
+    width: 340px; height: 340px; bottom: 6%; right: 30%;
+    background: {T["success"]}; opacity: {MESH_OPACITY * 0.45:.3f};
+    animation: mesh-float-2 46s ease-in-out infinite reverse;
+}}
+@keyframes mesh-float-1 {{
+    0%,100% {{ transform: translate(0,0) scale(1); }}
+    33%     {{ transform: translate(70px,50px) scale(1.12); }}
+    66%     {{ transform: translate(-30px,70px) scale(0.94); }}
+}}
+@keyframes mesh-float-2 {{
+    0%,100% {{ transform: translate(0,0) scale(1); }}
+    50%     {{ transform: translate(-80px,-60px) scale(1.16); }}
+}}
+@keyframes mesh-float-3 {{
+    0%,100% {{ transform: translate(0,0) scale(1); }}
+    50%     {{ transform: translate(60px,-45px) scale(1.06); }}
+}}
+@keyframes mesh-float-4 {{
+    0%,100% {{ transform: translate(0,0) scale(1); }}
+    50%     {{ transform: translate(-40px,55px) scale(0.9); }}
+}}
 
 /* ── Components ── */
 .meetmind-logo {{
@@ -149,17 +256,24 @@ h1,h2,h3,h4 {{ font-family: 'Space Grotesk', sans-serif !important; color: {T["t
     margin: 16px 0;
 }}
 
+/* Entrance animation, used across cards/panels */
+@keyframes fadeInUp {{
+    from {{ opacity: 0; transform: translateY(10px); }}
+    to   {{ opacity: 1; transform: translateY(0); }}
+}}
+
 /* Stat card */
 .stat-card {{
     background: {T["surface"]}; border: 1px solid {T["border"]};
     border-radius: 14px; padding: 18px 20px;
     box-shadow: {T["card_shadow"]};
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    animation: fadeInUp 0.45s ease both;
 }}
 .stat-card:hover {{
-    transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(0,212,170,0.13);
-    border-color: {T["accent"]}55;
+    transform: translateY(-3px) scale(1.015);
+    box-shadow: 0 12px 30px rgba({T["accent_rgb"]},0.16);
+    border-color: {T["accent"]}66;
 }}
 .stat-label {{
     font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
@@ -175,14 +289,44 @@ h1,h2,h3,h4 {{ font-family: 'Space Grotesk', sans-serif !important; color: {T["t
     background: {T["surface"]}; border: 1px solid {T["border"]};
     border-radius: 16px; padding: 24px 28px;
     margin-bottom: 18px; box-shadow: {T["card_shadow"]};
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    animation: fadeInUp 0.5s ease both;
 }}
+.content-card:hover {{ border-color: {T["accent"]}44; }}
 .card-eyebrow {{
     font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
     letter-spacing: 0.12em; color: {T["accent"]}; margin-bottom: 10px;
     display: flex; align-items: center; gap: 8px;
 }}
 .card-body {{
-    font-size: 0.9rem; color: {T["text_muted"]}; line-height: 1.75;
+    font-size: 0.95rem; color: {T["text_muted"]}; line-height: 1.8;
+}}
+
+/* Real Streamlit bordered container used for the Source Input card — replaces
+   Streamlit's default plain border with the same content-card treatment, and
+   properly nests the text input + buttons inside a single real element
+   (fixes the empty floating box that an unclosed st.markdown div used to leave). */
+div[data-testid="stVerticalBlockBorderWrapper"].st-key-source_input_card {{
+    background: {T["surface"]} !important;
+    border: 1px solid {T["border"]} !important;
+    border-radius: 16px !important;
+    box-shadow: {T["card_shadow"]} !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}}
+div[data-testid="stVerticalBlockBorderWrapper"].st-key-source_input_card:hover {{
+    border-color: {T["accent"]}44 !important;
+}}
+div[data-testid="stVerticalBlockBorderWrapper"].st-key-source_input_card > div > div[data-testid="stVerticalBlock"] {{
+    gap: 0.6rem !important;
+}}
+/* Fallback in case a future Streamlit version places the key class elsewhere */
+.st-key-source_input_card {{
+    background: {T["surface"]} !important;
+    border-radius: 16px !important;
+}}
+.st-key-source_input_card > div {{
+    border-color: {T["border"]} !important;
+    box-shadow: {T["card_shadow"]} !important;
 }}
 
 /* Animations */
@@ -215,12 +359,17 @@ h1,h2,h3,h4 {{ font-family: 'Space Grotesk', sans-serif !important; color: {T["t
     display: flex; align-items: center; justify-content: center;
     font-size: 0.72rem; font-weight: 700; flex-shrink: 0;
 }}
-.step-pending {{ background:{T["surface2"]}; border:2px solid {T["border"]}; color:{T["text_dim"]}; }}
+.step-pending {{ background:{T["surface2"]}; border:2px solid {T["border"]}; color:{T["text_dim"]}; transition: all 0.3s ease; }}
 .step-running {{
-    background:rgba(0,212,170,0.12); border:2px solid {T["accent"]}; color:{T["accent"]};
+    background:rgba({T["accent_rgb"]},0.14); border:2px solid {T["accent"]}; color:{T["accent"]};
     animation: spin-ring 1.4s linear infinite;
 }}
-.step-done {{ background:rgba(63,185,80,0.12); border:2px solid {T["success"]}; color:{T["success"]}; }}
+.step-done {{ background:rgba({T["success_rgb"]},0.14); border:2px solid {T["success"]}; color:{T["success"]}; animation: pop-in 0.3s ease; }}
+@keyframes pop-in {{
+    0% {{ transform: scale(0.6); opacity: 0.4; }}
+    60% {{ transform: scale(1.12); }}
+    100% {{ transform: scale(1); opacity: 1; }}
+}}
 @keyframes spin-ring {{
     0%   {{ box-shadow: 0 -3px 0 0 {T["accent"]}; }}
     25%  {{ box-shadow: 3px 0 0 0 {T["accent"]}; }}
@@ -258,47 +407,76 @@ h1,h2,h3,h4 {{ font-family: 'Space Grotesk', sans-serif !important; color: {T["t
     border: 1px solid {T["border"]}; border-radius: 20px;
     padding: 36px 40px; margin-bottom: 28px;
     position: relative; overflow: hidden;
+    animation: fadeInUp 0.55s ease both;
 }}
 .hero-banner::before {{
     content:''; position:absolute; top:-60px; right:-60px;
-    width:220px; height:220px;
-    background:radial-gradient(circle, {T["accent"]}1A 0%, transparent 70%);
+    width:260px; height:260px;
+    background:radial-gradient(circle, {T["accent"]}26 0%, transparent 70%);
     border-radius:50%;
+    animation: drift 6s ease-in-out infinite;
+}}
+.hero-banner::after {{
+    content:''; position:absolute; bottom:-80px; left:-40px;
+    width:220px; height:220px;
+    background:radial-gradient(circle, {T["accent2"]}1F 0%, transparent 70%);
+    border-radius:50%;
+    animation: drift 7s ease-in-out infinite reverse;
+}}
+@keyframes drift {{
+    0%,100% {{ transform: translate(0,0) scale(1); }}
+    50%     {{ transform: translate(-12px,10px) scale(1.06); }}
 }}
 .hero-title {{
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 2rem; font-weight: 700; color: {T["text"]};
-    letter-spacing: -0.03em; line-height: 1.15; margin: 0 0 10px;
+    font-size: 2.3rem; font-weight: 700; color: {T["text"]};
+    letter-spacing: -0.03em; line-height: 1.18; margin: 0 0 10px;
 }}
-.hero-title span {{ color: {T["accent"]}; }}
+.hero-title span {{
+    background: linear-gradient(90deg, {T["accent"]}, {T["accent2"]}, {T["accent"]});
+    background-size: 200% auto;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent; color: {T["accent"]};
+    animation: hero-gradient-shift 6s ease-in-out infinite;
+}}
+@keyframes hero-gradient-shift {{
+    0%,100% {{ background-position: 0% 50%; }}
+    50%     {{ background-position: 100% 50%; }}
+}}
 .hero-sub {{
-    font-size: 0.95rem; color: {T["text_muted"]};
-    max-width: 500px; line-height: 1.65;
+    font-size: 1.02rem; color: {T["text_muted"]};
+    max-width: 520px; line-height: 1.7;
 }}
 
 /* Action item rows */
 .action-item {{
     display:flex; align-items:flex-start; gap:10px;
     padding:8px 0; border-bottom:1px solid {T["border"]}44;
+    transition: padding-left 0.18s ease;
 }}
+.action-item:hover {{ padding-left: 4px; }}
 .action-item:last-child {{ border-bottom:none; }}
 .action-dot {{
     width:6px; height:6px; border-radius:50%;
     background:{T["accent"]}; margin-top:6px; flex-shrink:0;
+    box-shadow: 0 0 0 3px rgba({T["accent_rgb"]},0.16);
 }}
 .action-text {{ font-size:0.88rem; color:{T["text_muted"]}; line-height:1.55; }}
 
 /* Chat */
 .chat-bubble-user {{
-    background: linear-gradient(135deg,{T["accent"]}1A,{T["accent2"]}1A);
-    border:1px solid {T["accent"]}44; border-radius:14px 14px 4px 14px;
+    background: linear-gradient(135deg,{T["accent"]}22,{T["accent2"]}22);
+    border:1px solid {T["accent"]}55; border-radius:14px 14px 4px 14px;
     padding:12px 16px; font-size:0.9rem; color:{T["text"]};
     margin-left:18%; line-height:1.55;
+    animation: fadeInUp 0.3s ease both;
 }}
 .chat-bubble-ai {{
     background:{T["surface"]}; border:1px solid {T["border"]};
     border-radius:14px 14px 14px 4px; padding:12px 16px;
     font-size:0.9rem; color:{T["text"]}; margin-right:18%; line-height:1.55;
+    box-shadow: {T["card_shadow"]};
+    animation: fadeInUp 0.3s ease both;
 }}
 .chat-role {{
     font-size:0.68rem; font-weight:700; text-transform:uppercase;
@@ -322,11 +500,12 @@ h1,h2,h3,h4 {{ font-family: 'Space Grotesk', sans-serif !important; color: {T["t
 .badge {{
     display:inline-block; padding:3px 10px; border-radius:20px;
     font-size:0.7rem; font-weight:600; letter-spacing:0.06em;
-    text-transform:uppercase;
+    text-transform:uppercase; transition: transform 0.15s ease;
 }}
-.badge-success {{ background:rgba(63,185,80,0.13); color:{T["success"]}; border:1px solid rgba(63,185,80,0.28); }}
-.badge-accent  {{ background:rgba(0,212,170,0.11); color:{T["accent"]};  border:1px solid rgba(0,212,170,0.24); }}
-.badge-purple  {{ background:rgba(124,92,252,0.11);color:{T["accent2"]}; border:1px solid rgba(124,92,252,0.24); }}
+.badge:hover {{ transform: translateY(-1px); }}
+.badge-success {{ background:rgba({T["success_rgb"]},0.14); color:{T["success"]}; border:1px solid rgba({T["success_rgb"]},0.3); }}
+.badge-accent  {{ background:rgba({T["accent_rgb"]},0.12); color:{T["accent"]};  border:1px solid rgba({T["accent_rgb"]},0.28); }}
+.badge-purple  {{ background:rgba({T["accent2_rgb"]},0.12);color:{T["accent2"]}; border:1px solid rgba({T["accent2_rgb"]},0.28); }}
 
 .transcript-block {{
     background:{T["surface2"]}; border:1px solid {T["border"]};
@@ -342,74 +521,221 @@ h1,h2,h3,h4 {{ font-family: 'Space Grotesk', sans-serif !important; color: {T["t
     border-top: 1px solid {T["border"]};
 }}
 .about-section-label {{
-    font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
     letter-spacing: 0.14em; color: {T["accent"]}; margin-bottom: 12px;
+    opacity: 0; transform: translateY(14px);
+    animation: about-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 50%;
 }}
 .about-section-title {{
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 1.65rem; font-weight: 700; color: {T["text"]};
-    letter-spacing: -0.025em; line-height: 1.2; margin-bottom: 14px;
+    font-size: 1.85rem; font-weight: 700; color: {T["text"]};
+    letter-spacing: -0.025em; line-height: 1.22; margin-bottom: 14px;
+    opacity: 0; transform: translateY(18px);
+    animation: about-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 3% cover 55%;
 }}
 .about-section-body {{
-    font-size: 0.9rem; color: {T["text_muted"]}; line-height: 1.8;
+    font-size: 0.98rem; color: {T["text_muted"]}; line-height: 1.85;
     max-width: 640px;
+    opacity: 0; transform: translateY(18px);
+    animation: about-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 6% cover 60%;
+}}
+@keyframes about-reveal {{
+    to {{ opacity: 1; transform: translateY(0); }}
+}}
+@supports not (animation-timeline: view()) {{
+    .about-section-label, .about-section-title, .about-section-body {{
+        opacity: 1; transform: none; animation: fadeInUp 0.6s ease both;
+    }}
 }}
 
-/* How-it-works steps */
-.how-step {{
-    display: flex; gap: 18px; align-items: flex-start;
-    padding: 20px 0; border-bottom: 1px solid {T["border"]}44;
+/* ── How-it-works: vertical roadmap / timeline with scroll reveal ── */
+.roadmap {{
+    position: relative;
+    padding-left: 64px;
+    margin-top: 8px;
 }}
-.how-step:last-child {{ border-bottom: none; }}
-.how-step-num {{
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 2rem; font-weight: 700;
-    color: {T["accent"]}22; line-height: 1;
-    min-width: 48px;
+/* Static track — always visible, in the theme's border color */
+.roadmap-track {{
+    position: absolute; left: 19px; top: 6px; bottom: 6px; width: 2px;
+    background: {T["border"]};
+    border-radius: 2px;
+}}
+/* Colored fill that grows downward as the section scrolls into view.
+   Only `transform` (scaleY) is animated — GPU-friendly, no layout thrash. */
+.roadmap-fill {{
+    position: absolute; left: 19px; top: 6px; width: 2px; height: 100%;
+    background: linear-gradient(to bottom, {T["accent"]}, {T["accent2"]});
+    border-radius: 2px;
+    transform-origin: top;
+    transform: scaleY(0);
+    animation: roadmap-grow linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 95%;
+}}
+@keyframes roadmap-grow {{
+    to {{ transform: scaleY(1); }}
+}}
+@supports not (animation-timeline: view()) {{
+    .roadmap-fill {{ transform: scaleY(1); animation: none; }}
+}}
+
+/* Each step zigzags in from alternating sides with a slight rotation + scale
+   for a livelier reveal than a plain fade. Base (pre-animation) transform is
+   set per direction class; the shared keyframe below resets everything to
+   neutral, so both directions animate to the same resting state. */
+.roadmap-step {{
+    position: relative;
+    padding-bottom: 40px;
+    opacity: 0;
+    animation: roadmap-step-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 42%;
+}}
+.roadmap-step:last-child {{ padding-bottom: 4px; }}
+.roadmap-step.step-in-left  {{ transform: translateY(30px) translateX(-22px) rotate(-1.5deg) scale(0.96); }}
+.roadmap-step.step-in-right {{ transform: translateY(30px) translateX(22px)  rotate(1.5deg)  scale(0.96); }}
+@keyframes roadmap-step-reveal {{
+    to {{ opacity: 1; transform: translateY(0) translateX(0) rotate(0deg) scale(1); }}
+}}
+@supports not (animation-timeline: view()) {{
+    .roadmap-step {{
+        opacity: 1; transform: none;
+        animation: fadeInUp 0.6s ease both;
+    }}
+}}
+
+/* Numbered node — sits on the timeline, transitions from a neutral ring into
+   the accent gradient with a soft glow once its step has revealed. */
+.roadmap-node {{
+    position: absolute; left: -64px; top: 0;
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.92rem;
+    background: {T["surface"]}; border: 2px solid {T["border"]}; color: {T["text_muted"]};
+    z-index: 2;
+    animation: roadmap-node-activate linear both;
+    animation-timeline: view();
+    animation-range: entry 5% cover 48%;
+}}
+@keyframes roadmap-node-activate {{
+    to {{
+        background: linear-gradient(135deg, {T["accent"]}, {T["accent2"]});
+        border-color: {T["accent"]};
+        color: #fff;
+        box-shadow: 0 0 0 5px rgba({T["accent_rgb"]},0.16), 0 4px 16px rgba({T["accent_rgb"]},0.35);
+    }}
+}}
+@supports not (animation-timeline: view()) {{
+    .roadmap-node {{
+        animation: none;
+        background: linear-gradient(135deg, {T["accent"]}, {T["accent2"]});
+        border-color: {T["accent"]}; color: #fff;
+        box-shadow: 0 0 0 5px rgba({T["accent_rgb"]},0.16), 0 4px 16px rgba({T["accent_rgb"]},0.35);
+    }}
+}}
+/* Continuous, gentle "radar ping" ring — pure transform/opacity, so it stays
+   cheap even though it loops forever. */
+.roadmap-node::after {{
+    content: ''; position: absolute; inset: -6px; border-radius: 50%;
+    border: 2px solid {T["accent"]}; opacity: 0; pointer-events: none;
+    animation: roadmap-pulse-ring 2.8s ease-out infinite;
+}}
+@keyframes roadmap-pulse-ring {{
+    0%   {{ transform: scale(0.82); opacity: 0.55; }}
+    70%  {{ transform: scale(1.38); opacity: 0; }}
+    100% {{ transform: scale(1.38); opacity: 0; }}
+}}
+
+.roadmap-content {{
+    padding-top: 2px;
+    opacity: 0;
+    animation: roadmap-content-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 8% cover 46%;
+}}
+@keyframes roadmap-content-reveal {{
+    to {{ opacity: 1; }}
+}}
+@supports not (animation-timeline: view()) {{
+    .roadmap-content {{ opacity: 1; animation: none; }}
 }}
 .how-step-title {{
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.95rem; font-weight: 600; color: {T["text"]}; margin-bottom: 5px;
+    font-size: 1rem; font-weight: 600; color: {T["text"]}; margin-bottom: 6px;
+    transition: color 0.2s ease;
 }}
-.how-step-body {{ font-size: 0.86rem; color: {T["text_muted"]}; line-height: 1.65; }}
+.roadmap-step:hover .how-step-title {{ color: {T["accent"]}; }}
+.how-step-body {{ font-size: 0.92rem; color: {T["text_muted"]}; line-height: 1.7; max-width: 560px; }}
 
-/* Tech pill */
+
+
+/* ── Tech stack: floating glass bubbles ── */
 .tech-grid {{
-    display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px;
+    display: flex; flex-wrap: wrap; gap: 18px 20px; margin-top: 14px;
+    /* generous gaps keep bubbles from overlapping while they gently drift */
 }}
 .tech-pill {{
-    display: inline-flex; align-items: center; gap: 7px;
-    background: {T["surface2"]}; border: 1px solid {T["border"]};
-    border-radius: 8px; padding: 8px 14px;
-    font-size: 0.82rem; font-weight: 500; color: {T["text"]};
-    transition: border-color 0.2s, background 0.2s;
-}}
-.tech-pill:hover {{
-    border-color: {T["accent"]}88;
-    background: rgba(0,212,170,0.06);
+    display: inline-flex; align-items: center; gap: 10px;
+    background: {T["surface2"]}CC;
+    -webkit-backdrop-filter: {T["glass_blur"]};
+    backdrop-filter: {T["glass_blur"]};
+    border: 1px solid {T["border"]};
+    border-radius: 18px; padding: 14px 22px;
+    font-size: 0.95rem; font-weight: 500; color: {T["text"]};
+    box-shadow: 0 4px 14px rgba({T["accent_rgb"]},0.06);
+    transition: border-color 0.25s ease, background 0.25s ease,
+                box-shadow 0.25s ease, transform 0.25s ease;
+    will-change: transform;
 }}
 .tech-pill-dot {{
-    width: 7px; height: 7px; border-radius: 50%;
-}}
-
-/* Orbit animation for tech section icon */
-.orbit-ring {{
-    width: 90px; height: 90px;
-    border: 2px dashed {T["border"]};
-    border-radius: 50%;
-    position: relative;
-    animation: orbit-spin 8s linear infinite;
+    width: 9px; height: 9px; border-radius: 50%;
+    box-shadow: 0 0 0 4px currentColor22;
     flex-shrink: 0;
 }}
-.orbit-planet {{
-    width: 14px; height: 14px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, {T["accent"]}, {T["accent2"]});
-    position: absolute; top: -7px; left: 50%; margin-left: -7px;
+/* Four distinct float paths — duration, delay, amplitude and rotation all
+   differ so the bubbles never move in lockstep. Only `transform` animates. */
+@keyframes floatBubbleA {{
+    0%   {{ transform: translate(0,0) rotate(0deg); }}
+    25%  {{ transform: translate(9px,-14px) rotate(1deg); }}
+    50%  {{ transform: translate(-6px,-20px) rotate(-1deg); }}
+    75%  {{ transform: translate(-13px,-7px) rotate(0.5deg); }}
+    100% {{ transform: translate(0,0) rotate(0deg); }}
 }}
-@keyframes orbit-spin {{
-    from {{ transform: rotate(0deg); }}
-    to   {{ transform: rotate(360deg); }}
+@keyframes floatBubbleB {{
+    0%   {{ transform: translate(0,0) rotate(0deg); }}
+    30%  {{ transform: translate(-11px,-9px) rotate(-1.2deg); }}
+    60%  {{ transform: translate(7px,-18px) rotate(1deg); }}
+    100% {{ transform: translate(0,0) rotate(0deg); }}
+}}
+@keyframes floatBubbleC {{
+    0%   {{ transform: translate(0,0) rotate(0deg); }}
+    20%  {{ transform: translate(6px,-8px) rotate(0.8deg); }}
+    55%  {{ transform: translate(-10px,-16px) rotate(-1deg); }}
+    80%  {{ transform: translate(4px,-4px) rotate(0.5deg); }}
+    100% {{ transform: translate(0,0) rotate(0deg); }}
+}}
+@keyframes floatBubbleD {{
+    0%   {{ transform: translate(0,0) rotate(0deg); }}
+    35%  {{ transform: translate(-8px,-17px) rotate(-0.8deg); }}
+    70%  {{ transform: translate(10px,-6px) rotate(1deg); }}
+    100% {{ transform: translate(0,0) rotate(0deg); }}
+}}
+.tech-grid .tech-pill:nth-child(4n+1) {{ animation: floatBubbleA 7.5s ease-in-out infinite; animation-delay: 0s; }}
+.tech-grid .tech-pill:nth-child(4n+2) {{ animation: floatBubbleB 8.8s ease-in-out infinite; animation-delay: 0.7s; }}
+.tech-grid .tech-pill:nth-child(4n+3) {{ animation: floatBubbleC 6.6s ease-in-out infinite; animation-delay: 1.3s; }}
+.tech-grid .tech-pill:nth-child(4n)   {{ animation: floatBubbleD 9.4s ease-in-out infinite; animation-delay: 1.9s; }}
+.tech-pill:hover {{
+    animation-play-state: paused;
+    border-color: {T["accent"]}99;
+    background: rgba({T["accent_rgb"]},0.10);
+    box-shadow: 0 0 0 4px rgba({T["accent_rgb"]},0.14), 0 10px 24px rgba({T["accent2_rgb"]},0.16);
+    transform: scale(1.06) !important;
 }}
 
 /* Feature cards grid */
@@ -420,61 +746,91 @@ h1,h2,h3,h4 {{ font-family: 'Space Grotesk', sans-serif !important; color: {T["t
 .feature-card {{
     background: {T["surface"]}; border: 1px solid {T["border"]};
     border-radius: 14px; padding: 22px 20px;
-    transition: transform 0.2s, border-color 0.2s;
+    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+    opacity: 0; transform: translateY(24px) scale(0.97);
+    animation: feature-card-reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 55%;
+}}
+@keyframes feature-card-reveal {{
+    to {{ opacity: 1; transform: translateY(0) scale(1); }}
+}}
+@supports not (animation-timeline: view()) {{
+    .feature-card {{ opacity: 1; transform: none; animation: fadeInUp 0.5s ease both; }}
 }}
 .feature-card:hover {{
-    transform: translateY(-3px);
-    border-color: {T["accent"]}55;
+    transform: translateY(-4px) scale(1) !important;
+    border-color: {T["accent"]}66;
+    box-shadow: 0 14px 32px rgba({T["accent_rgb"]},0.14);
 }}
 .feature-icon {{
     width: 36px; height: 36px; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
     font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
     font-weight: 700; color: #fff; margin-bottom: 14px;
+    transition: transform 0.22s ease;
 }}
+.feature-card:hover .feature-icon {{ transform: scale(1.08) rotate(-4deg); }}
 .feature-title {{
-    font-family: 'Space Grotesk', sans-serif; font-size: 0.92rem;
+    font-family: 'Space Grotesk', sans-serif; font-size: 0.98rem;
     font-weight: 600; color: {T["text"]}; margin-bottom: 6px;
 }}
-.feature-body {{ font-size: 0.8rem; color: {T["text_muted"]}; line-height: 1.6; }}
+.feature-body {{ font-size: 0.86rem; color: {T["text_muted"]}; line-height: 1.65; }}
 
-/* ── Footer ── */
+/* ── Footer: glassmorphism panel ── */
 .site-footer {{
-    background: {T["footer_bg"]};
-    border-top: 1px solid {T["border"]};
+    background: {T["surface"]}{FOOTER_ALPHA};
+    -webkit-backdrop-filter: saturate(180%) blur(22px);
+    backdrop-filter: saturate(180%) blur(22px);
+    border: 1px solid {T["border"]};
     padding: 48px 40px 28px;
     margin-top: 64px;
-    border-radius: 20px 20px 0 0;
+    border-radius: 24px 24px 0 0;
+    position: relative; overflow: hidden;
+    box-shadow: {T["card_shadow"]}, inset 0 1px 0 rgba(255,255,255,0.07);
+}}
+/* Two soft ambient glows — teal top-right, violet bottom-left — behind the glass */
+.site-footer::before {{
+    content:''; position:absolute; top:-100px; right:-60px;
+    width:280px; height:280px;
+    background:radial-gradient(circle, {T["accent"]}30 0%, transparent 70%);
+    border-radius:50%;
+}}
+.site-footer::after {{
+    content:''; position:absolute; bottom:-120px; left:-70px;
+    width:260px; height:260px;
+    background:radial-gradient(circle, {T["accent2"]}26 0%, transparent 70%);
+    border-radius:50%;
 }}
 .footer-brand {{
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 1.1rem; font-weight: 700; color: #fff;
+    font-size: 1.1rem; font-weight: 700; color: {T["text"]};
     letter-spacing: -0.02em; margin-bottom: 6px;
 }}
 .footer-tagline {{
-    font-size: 0.82rem; color: #6B7280; line-height: 1.6; max-width: 280px;
+    font-size: 0.82rem; color: {T["text_muted"]}; line-height: 1.6; max-width: 280px;
 }}
 .footer-col-title {{
     font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.12em; color: #9CA3AF; margin-bottom: 14px;
+    letter-spacing: 0.12em; color: {T["text_dim"]}; margin-bottom: 14px;
 }}
 .footer-link {{
-    display: block; font-size: 0.84rem; color: #6B7280;
+    display: block; font-size: 0.84rem; color: {T["text_muted"]};
     text-decoration: none; margin-bottom: 8px;
-    transition: color 0.15s;
+    transition: color 0.15s ease, transform 0.15s ease;
 }}
-.footer-link:hover {{ color: {T["accent"]}; }}
+.footer-link:hover {{ color: {T["accent"]}; transform: translateX(3px); }}
 .footer-bottom {{
-    border-top: 1px solid #1F2937;
+    border-top: 1px solid {T["border"]};
     margin-top: 36px; padding-top: 20px;
     display: flex; justify-content: space-between; align-items: center;
     flex-wrap: wrap; gap: 10px;
 }}
 .footer-copy {{
-    font-size: 0.78rem; color: #4B5563;
+    font-size: 0.78rem; color: {T["text_dim"]};
 }}
 .footer-made-with {{
-    font-size: 0.78rem; color: #4B5563;
+    font-size: 0.78rem; color: {T["text_dim"]};
 }}
 .footer-made-with span {{ color: {T["accent"]}; }}
 
@@ -491,7 +847,7 @@ h1,h2,h3,h4 {{ font-family: 'Space Grotesk', sans-serif !important; color: {T["t
 }}
 .footer-divider {{
     height: 1px;
-    background: #1F2937;
+    background: {T["border"]};
     margin-top: 12px;
 }}
 /* 👆 YAHAN TAK 👆 */
@@ -511,18 +867,115 @@ h1,h2,h3,h4 {{ font-family: 'Space Grotesk', sans-serif !important; color: {T["t
 [data-testid="stExpander"] {{
     border:1px solid {T["border"]} !important;
     border-radius:12px !important; background:{T["surface"]} !important;
+    box-shadow: {T["card_shadow"]} !important;
+}}
+[data-testid="stExpander"] summary {{
+    color:{T["text"]} !important;
+}}
+[data-testid="stExpander"] summary svg {{
+    fill:{T["text_muted"]} !important;
 }}
 .streamlit-expanderHeader {{
     font-family:'Space Grotesk',sans-serif !important;
     font-weight:600 !important; color:{T["text"]} !important;
 }}
 [data-testid="stSidebar"] .stButton > button,
-[data-testid="stSidebar"] .stButton > button *,
-.stButton > button,
-.stButton > button * {{
-    color: #111827 !important;
+[data-testid="stSidebar"] .stButton > button * {{
+    color: {T["btn_text"]} !important;
+}}
+
+/* Placeholder text */
+.stTextInput input::placeholder,
+.stTextArea textarea::placeholder,
+[data-testid="stChatInput"] textarea::placeholder {{
+    color: {T["text_dim"]} !important;
+    opacity: 1 !important;
+}}
+
+/* Chat input widget */
+[data-testid="stChatInput"] {{
+    background: {T["surface"]} !important;
+    border: 1.5px solid {T["border"]} !important;
+    border-radius: 14px !important;
+    box-shadow: {T["card_shadow"]} !important;
+    transition: border-color 0.2s ease !important;
+}}
+[data-testid="stChatInput"]:focus-within {{
+    border-color: {T["accent"]} !important;
+    box-shadow: 0 0 0 3px rgba({T["accent_rgb"]},0.16) !important;
+}}
+[data-testid="stChatInput"] textarea {{
+    background: transparent !important;
+    color: {T["text"]} !important;
+    caret-color: {T["text"]} !important;
+    font-family: 'Inter', sans-serif !important;
+}}
+[data-testid="stChatInput"] button {{
+    background: linear-gradient(135deg, {T["accent"]}, {T["accent2"]}) !important;
+    border-radius: 8px !important;
+}}
+[data-testid="stChatInput"] button svg {{
+    fill: {T["btn_text"]} !important;
+}}
+
+/* Alert boxes (st.warning / st.error / st.success / st.info) */
+[data-testid="stAlert"] {{
+    background: {T["surface2"]} !important;
+    border: 1px solid {T["border"]} !important;
+    border-left: 3px solid {T["accent"]} !important;
+    border-radius: 10px !important;
+    color: {T["text"]} !important;
+}}
+[data-testid="stAlert"] p {{ color: {T["text"]} !important; }}
+[data-testid="stAlert"] svg {{ fill: {T["accent"]} !important; }}
+div[data-baseweb="notification"][kind="warning"] {{ border-left-color: {T["warning"]} !important; }}
+div[data-baseweb="notification"][kind="error"]   {{ border-left-color: {T["error"]} !important; }}
+div[data-baseweb="notification"][kind="success"] {{ border-left-color: {T["success"]} !important; }}
+
+/* Select dropdown popover (rendered in a portal, needs explicit theming) */
+div[data-baseweb="popover"] div[data-baseweb="menu"] {{
+    background: {T["surface"]} !important;
+    border: 1px solid {T["border"]} !important;
+    box-shadow: {T["card_shadow"]} !important;
+}}
+div[data-baseweb="popover"] li {{
+    color: {T["text"]} !important;
+    background: transparent !important;
+}}
+div[data-baseweb="popover"] li:hover {{
+    background: rgba({T["accent_rgb"]},0.12) !important;
+}}
+.stSelectbox [data-baseweb="select"] > div {{
+    color: {T["text"]} !important;
+}}
+.stSelectbox svg {{ fill: {T["text_muted"]} !important; }}
+
+/* Links inside markdown content */
+[data-testid="stMarkdownContainer"] a {{
+    color: {T["accent"]} !important;
+}}
+
+/* ── Accessibility: honor reduced-motion preference ── */
+@media (prefers-reduced-motion: reduce) {{
+    *, *::before, *::after {{
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }}
 }}
 </style>
+""", unsafe_allow_html=True)
+
+# ─── Ambient mesh-gradient background layer ────────────────────────────────────
+st.markdown("""
+<div class="ambient-background">
+    <div class="mesh-blob mesh-blob-1"></div>
+    <div class="mesh-blob mesh-blob-2"></div>
+    <div class="mesh-blob mesh-blob-3"></div>
+    <div class="mesh-blob mesh-blob-4"></div>
+    <div class="mesh-blob mesh-blob-5"></div>
+</div>
 """, unsafe_allow_html=True)
 
 
@@ -632,15 +1085,14 @@ if st.session_state.active_tab == "analyze":
     """, unsafe_allow_html=True)
 
     # Input
-    st.markdown('<div class="content-card">', unsafe_allow_html=True)
-    st.markdown('<div class="card-eyebrow">◈ Source Input</div>', unsafe_allow_html=True)
-    source_input = st.text_input("source", placeholder="https://youtube.com/watch?v=… or /path/to/recording.mp4", label_visibility="collapsed")
-    col_run, col_clear = st.columns([3, 1])
-    with col_run:
-        run_btn = st.button("Run Analysis", key="run_btn", use_container_width=True)
-    with col_clear:
-        clear_btn = st.button("Clear", key="clear_btn", use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    with st.container(border=True, key="source_input_card"):
+        st.markdown('<div class="card-eyebrow">◈ Source Input</div>', unsafe_allow_html=True)
+        source_input = st.text_input("source", placeholder="https://youtube.com/watch?v=… or /path/to/recording.mp4", label_visibility="collapsed")
+        col_run, col_clear = st.columns([3, 1])
+        with col_run:
+            run_btn = st.button("Run Analysis", key="run_btn", use_container_width=True)
+        with col_clear:
+            clear_btn = st.button("Clear", key="clear_btn", use_container_width=True)
 
     if clear_btn:
         st.session_state.result = None
@@ -663,7 +1115,7 @@ if st.session_state.active_tab == "analyze":
         try:
             from utils.audio_processor import process_input
             from core.transcriber import transcribe_all
-            from core.summarize import summarize, generate_title
+            from core.summarizer import summarize, generate_title
             from core.extractor import extract_action_items, extract_key_decisions, extract_questions
             from core.rag_engine import build_rag_chain
 
@@ -928,16 +1380,24 @@ steps = [
     )
 ]
 
-for num, title, body in steps:
-    st.markdown(f"""
-    <div class="how-step">
-        <div class="how-step-num">{num}</div>
-        <div>
+roadmap_steps_html = "".join([
+    f"""<div class="roadmap-step {'step-in-left' if i % 2 == 0 else 'step-in-right'}">
+        <div class="roadmap-node">{num}</div>
+        <div class="roadmap-content">
             <div class="how-step-title">{title}</div>
             <div class="how-step-body">{body}</div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+    </div>"""
+    for i, (num, title, body) in enumerate(steps)
+])
+
+st.markdown(f"""
+<div class="roadmap">
+    <div class="roadmap-track"></div>
+    <div class="roadmap-fill"></div>
+    {roadmap_steps_html}
+</div>
+""", unsafe_allow_html=True)
 
 # ── Tech Stack ────────────────────────────────────────────────────────────────
 tech_stacks = [
@@ -956,26 +1416,19 @@ tech_stacks = [
 _t_text = T["text"]
 _t_muted = T["text_muted"]
 pills_html = "".join([
-    '<div class="tech-pill"><div class="tech-pill-dot" style="background:' + c + ';"></div><div><div style="font-weight:600;font-size:0.82rem;color:' + _t_text + ';">' + name + '</div><div style="font-size:0.72rem;color:' + _t_muted + ';">' + role + '</div></div></div>'
+    '<div class="tech-pill"><div class="tech-pill-dot" style="background:' + c + ';"></div><div><div style="font-weight:600;font-size:0.92rem;color:' + _t_text + ';">' + name + '</div><div style="font-size:0.8rem;color:' + _t_muted + ';">' + role + '</div></div></div>'
     for c, name, role in tech_stacks
 ])
 
 st.markdown(f"""
 <div style="padding: 48px 0; border-top: 1px solid {T['border']};">
-    <div style="display:flex;align-items:center;gap:28px;flex-wrap:wrap;">
-        <div>
-            <div class="about-section-label">Tech Stack</div>
-            <div class="about-section-title">Built with</div>
-            <div class="about-section-body" style="margin-bottom:24px;">
-                Every layer of the stack is open-source or freely accessible via API, making this
-                deployable on a laptop or a free-tier cloud instance.
-            </div>
-            <div class="tech-grid">{pills_html}</div>
-        </div>
-        <div style="flex-shrink:0;margin-left:auto;">
-            <div class="orbit-ring"><div class="orbit-planet"></div></div>
-        </div>
+    <div class="about-section-label">Tech Stack</div>
+    <div class="about-section-title">Built with</div>
+    <div class="about-section-body" style="margin-bottom:24px;">
+        Every layer of the stack is open-source or freely accessible via API, making this
+        deployable on a laptop or a free-tier cloud instance.
     </div>
+    <div class="tech-grid">{pills_html}</div>
 </div>
 """, unsafe_allow_html=True)
 
