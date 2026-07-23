@@ -8,7 +8,7 @@ pydub==0.25.1
 ffmpeg-python==0.2.0
 
 # ---------------- Speech-to-Text ----------------
-//openai-whisper==20231117
+#openai-whisper==2023git 1117
 openai-whisper
 torch==2.3.1
 torchaudio==2.3.1
